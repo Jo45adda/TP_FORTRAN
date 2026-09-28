@@ -5,7 +5,7 @@ program convert_temp1
         ! Instructions
         print*, "Please type the temp in F"
         read*, Deg_F
-        Deg_C = 5*(Deg_F-32)/9
+        Deg_C = 5*(Deg_F-32)/9.
         K = Deg_C + 273
         print*, "This is equal to", Deg_C,"C and ", K,"K"
 end program convert_temp1
