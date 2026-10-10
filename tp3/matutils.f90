@@ -94,14 +94,63 @@ contains
         end do
 
     end function matvec
-    ! produit matrice-matrice pour une matrice sparse
+        ! produit matrice-matrice pour une matrice sparse : C = A*B
     function matmat(A,B) result(C)
         type(MatrixSparse), intent(in) :: A,B
         type(MatrixSparse) :: C
         integer :: i,j,k,l
-        integer :: nnzC, maxnnzC
-        integer, allocatable :: rowC(:), colC(:)
-        real(8), allocatable :: valC(:)
+        integer :: nnzC, maxnnzC, ncols
+        integer, allocatable :: rowC(:), colC(:), cols(:)
+        real(8), allocatable :: valC(:), w(:)
+        logical, allocatable :: used(:)
+
+        ! Majorant du nombre de non-nuls de C
+        maxnnzC = 0
+        do i = 1,A%n
+            do j = A%nnz(i)+1,A%nnz(i+1)
+                k = A%icol(j)                          ! colonne j de A = ligne k de B
+                maxnnzC = maxnnzC + B%nnz(k+1) - B%nnz(k)
+            end do
+        end do
+
+        allocate(rowC(A%n+1), colC(maxnnzC), valC(maxnnzC))
+        allocate(cols(B%n), w(B%n), used(B%n))
+        w = 0.0d0
+        used = .false.
+        rowC(1) = 0
+        nnzC = 0
+
+        do i = 1,A%n
+            ncols = 0                                  ! colonnes distinctes de la ligne i
+            do j = A%nnz(i)+1,A%nnz(i+1)
+                k = A%icol(j)
+                do l = B%nnz(k)+1,B%nnz(k+1)
+                    if (.not. used(B%icol(l))) then    ! premiere rencontre de cette colonne
+                        used(B%icol(l)) = .true.
+                        ncols = ncols + 1
+                        cols(ncols) = B%icol(l)
+                    end if
+                    w(B%icol(l)) = w(B%icol(l)) + A%val(j)*B%val(l)
+                end do
+            end do
+            do l = 1,ncols                             ! recopie dans C et remise a zero
+                nnzC = nnzC + 1
+                colC(nnzC) = cols(l)
+                valC(nnzC) = w(cols(l))
+                w(cols(l)) = 0.0d0
+                used(cols(l)) = .false.
+            end do
+            rowC(i+1) = nnzC
+        end do
+
+        ! Construction de C avec les tailles exactes
+        C%n = A%n
+        call move_alloc(rowC, C%nnz)
+        C%val  = valC(1:nnzC)
+        C%icol = colC(1:nnzC)
+
+    end function matmat
+        
         
 
 end module matutils
