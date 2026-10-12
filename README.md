@@ -1,93 +1,93 @@
-# ma0934_fortran
+# MA0922 - TP3 : FORTRAN 
 
+Résolution d'un système linéaire tridiagonal `Ax = b` par la méthode de Jacobi, avec une matrice creuse stockée au format CSR, et interface Python (`f2py`) pour les benchmarks.
 
+## Contenu du dépôt
 
-## Getting started
+| Fichier | Rôle |
+|---|---|
+| `matutils.f90` | module : type `MatrixSparse` (CSR), `tridiag`, `trace`, `norme`, surcharge de `*` (`matvec`, `matmat`) |
+| `linearsolver.f90` | module : routine `jacobi` |
+| `verifications.f90` | programme : lit `lp.dat`, résout, écrit `res.dat` |
+| `bench.f90` | procédure `bench(n)` : temps de résolution pour une taille `n` |
+| `run_benchmarks.py` | script Python : appelle `bench` pour plusieurs `n` et trace `bench.png` |
+| `scripts/run_experiences.sh` | lance les cas d'expériences du rapport |
+| `rapport.tex`, `references.bib`, `figures/` | rapport LaTeX |
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## 1. Partie Fortran
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+Compilation et exécution :
 
-## Add your files
+```console
+gfortran -Wall -o verif matutils.f90 linearsolver.f90 verifications.f90
+./verif
+```
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+Le programme lit `lp.dat` dans le répertoire courant (il s'arrête avec un message clair s'il est absent). Format :
 
 ```
-cd existing_repo
-git remote add origin https://gitlab-mi.univ-reims.fr/adda0006/ma0934_fortran.git
-git branch -M main
-git push -uf origin main
+100              <- n
+1.0 4.0 2.0 1.0  <- a1 a2 a3 a4 (sous-diagonale, diagonale, sur-diagonale, terme source)
+1000 1.0e-7      <- kmax epsilon
 ```
 
-## Integrate with your tools
+La solution est écrite dans `res.dat`. Pour rejouer tous les cas du rapport :
 
-* [Set up project integrations](https://gitlab-mi.univ-reims.fr/adda0006/ma0934_fortran/-/settings/integrations)
+```console
+./scripts/run_experiences.sh ./verif
+```
 
-## Collaborate with your team
+## 2. Passage à Python : difficultés rencontrées
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+### 2.1 Erreur `meson` introuvable
 
-## Test and Deploy
+En exécutant :
 
-Use the built-in continuous integration in GitLab.
+```console
+python3 -m numpy.f2py -c matutils.f90 linearsolver.f90 bench.f90 -m fbench only: bench
+```
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+j'ai obtenu une erreur indiquant que `meson` n'était pas installé (`FileNotFoundError: ... 'meson'`). Avec Python ≥ 3.12, `f2py` n'utilise plus `distutils` mais `meson`. J'ai donc installé :
 
-***
+```console
+sudo apt install meson ninja-build
+```
 
-# Editing this README
+Après cela, la compilation s'est déroulée sans erreur.
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+Remarque : sans `only: bench`, `f2py` essaie d'envelopper `jacobi`, qui prend un type dérivé en argument, et échoue (`No C-type found ... assuming void`, puis `KeyError: 'void'`). Seule `bench`, qui n'utilise que des types simples (`integer`, `real(8)`), est exposée à Python.
 
-## Suggestions for a good README
+### 2.2 `matplotlib` non installé
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+Je ne parvenais pas à exécuter `run_benchmarks.py` car `matplotlib` n'était pas installé dans mon environnement. J'utilise WSL, intégré à VS Code, ce qui rend cet environnement complètement séparé de l'installation Python que j'avais sur Windows : les paquets installés d'un côté ne sont pas visibles de l'autre.
 
-## Name
-Choose a self-explaining name for your project.
+Sur les distributions Debian/Ubuntu récentes, `pip install` hors d'un environnement virtuel est de plus refusé (message `externally-managed-environment`). La solution est de créer un environnement virtuel (`venv`) directement depuis le terminal WSL de VS Code :
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+```console
+sudo apt update && sudo apt install -y python3-venv python3-full
+python3 -m venv env
+source env/bin/activate
+pip install numpy matplotlib meson ninja
+```
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+Deux points importants :
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+- `numpy` doit être installé **dans le venv** : `python3 -m numpy.f2py` utilise le `numpy` de l'environnement actif.
+- le module `fbench` doit être **recompilé depuis le venv activé**, pour qu'il corresponde au `numpy` et au Python utilisés ensuite :
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+```console
+source env/bin/activate
+python -m numpy.f2py -c matutils.f90 linearsolver.f90 bench.f90 -m fbench only: bench
+python -c "import fbench; print(fbench.bench(1000))"
+python run_benchmarks.py
+```
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+Le premier appel doit afficher un temps en secondes, et le script produit `bench.png`.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+Pour que VS Code utilise ce venv : `Ctrl+Shift+P`, « Python: Select Interpreter », puis choisir `./env/bin/python`. Le terminal doit être celui de WSL (indiqué en bas à gauche de la fenêtre).
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+Alternative sans venv : `sudo apt install python3-matplotlib python3-numpy`, qui installe les paquets au niveau du système.
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+## 3. Résultats
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Les résultats (vérifications, expériences sur `n`, `epsilon`, `kmax`, exemples d'application, benchmarks) sont présentés et commentés dans le rapport (`rapport.tex`).

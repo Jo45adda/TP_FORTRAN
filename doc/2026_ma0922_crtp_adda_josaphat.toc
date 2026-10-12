@@ -1,0 +1,27 @@
+\babel@toc {french}{}\relax 
+\contentsline {section}{\numberline {1}Problème, format CSR et méthode de Jacobi}{1}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Le problème}{1}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Stockage CSR}{2}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}La méthode de Jacobi}{2}{subsection.1.3}%
+\contentsline {subsection}{\numberline {1.4}Convergence}{2}{subsection.1.4}%
+\contentsline {subsection}{\numberline {1.5}Itératif ou direct ?}{2}{subsection.1.5}%
+\contentsline {section}{\numberline {2}Implémentation en Fortran}{2}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Le type \lstinline {MatrixSparse}}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Construction, trace et norme}{3}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Surcharge de l'opérateur \lstinline {*}}{3}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Produit matrice-vecteur et matrice-matrice}{3}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Le solveur et le programme de vérification}{4}{subsection.2.5}%
+\contentsline {section}{\numberline {3}Vérifications}{4}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Résolution à la main pour $n=2,3,4$}{4}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Cas $n=100$, $k_{\max }=1000$, $\varepsilon =10^{-7}$}{5}{subsection.3.2}%
+\contentsline {section}{\numberline {4}Expériences complémentaires}{6}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Influence de la taille $n$}{6}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Influence de $\varepsilon $ et de $k_{\max }$}{6}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Application 1 : équation de Poisson en 1D}{6}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Application 2 : un pas d'Euler implicite pour l'équation de la chaleur}{7}{subsection.4.4}%
+\contentsline {section}{\numberline {5}Benchmarks}{8}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Système choisi}{8}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Interface Python avec \lstinline {f2py}}{8}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Résultats}{8}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Analyse}{9}{subsection.5.4}%
+\providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 
